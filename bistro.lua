@@ -20,33 +20,7 @@ function init()
   g.key = grid_key
   
   params:add_separator()
-  
-  cs_AMP = controlspec.new(0,1,'lin',0,0.5,'')
-  params:add{type="control",id="amp",controlspec=cs_AMP,
-    action=function(x) engine.amp(x) end}
-
-  cs_PW = controlspec.new(0,100,'lin',0,50,'%')
-  params:add{type="control",id="pw",controlspec=cs_PW,
-    action=function(x) engine.pw(x/100) end}
-
-  cs_REL = controlspec.new(0.1,3.2,'lin',0,1.2,'s')
-  params:add{type="control",id="release",controlspec=cs_REL,
-    action=function(x) engine.release(x) end}
-
-  cs_CUT = controlspec.new(50,5000,'exp',0,800,'hz')
-  params:add{type="control",id="cutoff",controlspec=cs_CUT,
-    action=function(x) engine.cutoff(x) end}
-
-  cs_GAIN = controlspec.new(0,4,'lin',0,1,'')
-  params:add{type="control",id="gain",controlspec=cs_GAIN,
-    action=function(x) engine.gain(x) end}
-  
-  cs_PAN = controlspec.new(-1,1, 'lin',0,0,'')
-  params:add{type="control",id="pan",controlspec=cs_PAN,
-    action=function(x) engine.pan(x) end}
-  
-  params:add_separator()
-
+  params:add_option("clock_rate", "clock rate", {1, 2, 4, 8, 16}, 4)
   params:add_group("note data", 1 + g.cols)
   params:add_number("base_note", "base note", 1, 127, 60)
   
@@ -79,6 +53,32 @@ function init()
     end
   end
   
+  params:add_separator()
+  
+  cs_AMP = controlspec.new(0,1,'lin',0,0.5,'')
+  params:add{type="control",id="amp",controlspec=cs_AMP,
+    action=function(x) engine.amp(x) end}
+
+  cs_PW = controlspec.new(0,100,'lin',0,50,'%')
+  params:add{type="control",id="pw",controlspec=cs_PW,
+    action=function(x) engine.pw(x/100) end}
+
+  cs_REL = controlspec.new(0.1,3.2,'lin',0,1.2,'s')
+  params:add{type="control",id="release",controlspec=cs_REL,
+    action=function(x) engine.release(x) end}
+
+  cs_CUT = controlspec.new(50,5000,'exp',0,800,'hz')
+  params:add{type="control",id="cutoff",controlspec=cs_CUT,
+    action=function(x) engine.cutoff(x) end}
+
+  cs_GAIN = controlspec.new(0,4,'lin',0,1,'')
+  params:add{type="control",id="gain",controlspec=cs_GAIN,
+    action=function(x) engine.gain(x) end}
+  
+  cs_PAN = controlspec.new(-1,1, 'lin',0,0,'')
+  params:add{type="control",id="pan",controlspec=cs_PAN,
+    action=function(x) engine.pan(x) end}
+  
   params:bang()
   params:read()
   
@@ -93,9 +93,11 @@ end
 
 function tick()
   while true do
-    clock.sync(1/4)
+    local rate = params:get("clock_rate")
+    clock.sync(1/rate)
     
     grid_redraw()
+    redraw()
     
     for i=1,g.cols do
       local track = tracks[i]
@@ -234,6 +236,15 @@ function enc(n, d)
     page = util.clamp(page + d, 1, #pages)
   end
   
+  if page == 1 then
+    -- PLAY
+    -- base note, clock division
+    if n == 2 then
+      params:delta("base_note", d)
+    elseif n == 3 then
+    end
+  end
+  
   grid_redraw()
   redraw()
 end
@@ -257,7 +268,41 @@ end
 
 function redraw()
   screen.clear()
+  
   screen.move(0, 10)
+  screen.level(15)
   screen.text(pages[page])
+  
+  if page == 1 then
+    -- PLAY
+    for i=1,g.cols do
+      local track = tracks[i]
+      
+      screen.move(10 + (i-1)*10, 36)
+      
+      if track.pattern ~= nil and track.counter ~= nil then
+        local p = get_pattern(track.pattern)
+        local t = p[track.counter]
+        
+        screen.level(t == 1 and 15 or 1)
+        screen.text(t == 1 and "." or ".")
+      else
+        screen.level(1)
+        screen.text(".")
+      end
+    end
+  elseif page == 2 then
+    -- PATTERNS
+  elseif page == 3 then
+    -- LENGTHS
+    for i=1,g.cols do
+      local length = get_pattern_length(i)
+      
+      screen.move(10 + (i-1)*10, 36)
+      screen.level(length)
+      screen.text(length)
+    end
+  end
+  
   screen.update()
 end
