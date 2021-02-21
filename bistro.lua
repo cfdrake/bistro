@@ -238,10 +238,10 @@ function enc(n, d)
   
   if page == 1 then
     -- PLAY
-    -- base note, clock division
     if n == 2 then
-      params:delta("base_note", d)
+      params:delta("cutoff", d)
     elseif n == 3 then
+      params:delta("pw", d)
     end
   end
   
