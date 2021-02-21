@@ -6,6 +6,7 @@
 engine.name = "PolyPerc"
 
 local MusicUtil = require "musicutil"
+local hs = include("lib/halfsecond")
 
 local g
 local clk
@@ -78,6 +79,9 @@ function init()
   cs_PAN = controlspec.new(-1,1, 'lin',0,0,'')
   params:add{type="control",id="pan",controlspec=cs_PAN,
     action=function(x) engine.pan(x) end}
+  
+  params:add_separator()
+  hs.init()
   
   params:bang()
   params:read()
@@ -259,7 +263,10 @@ function key(n, z)
     -- random notes?
   elseif page == 2 then
     -- PATTERNS
-    -- random trigs?
+    if n == 3 then
+      for i=1,g.rows do
+      end
+    end
   elseif page == 3 then
     -- LENGTH
     -- random lengths?
