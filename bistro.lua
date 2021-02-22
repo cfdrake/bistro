@@ -247,16 +247,23 @@ function key(n, z)
   
   if page == 1 then
     -- PLAY
-    -- random notes?
+    -- todo: random notes?
   elseif page == 2 then
     -- PATTERNS
     if n == 3 then
-      for i=1,g.rows do
+      for i=1,g.cols do
+        for j=1,g.rows do
+          set_pattern_trig(i, j, math.random() > 0.5 and 1 or 0)
+        end
       end
     end
   elseif page == 3 then
     -- LENGTH
-    -- random lengths?
+    if n == 3 then
+      for i=1,g.cols do
+        set_pattern_length(i, math.random(1, g.cols))
+      end
+    end
   end
 end
 
@@ -287,6 +294,11 @@ function redraw()
     end
   elseif page == 2 then
     -- PATTERNS
+    screen.move(10, 36)
+    screen.level(15)
+    screen.text("KEY3")
+    screen.level(5)
+    screen.text(" to randomize")
   elseif page == 3 then
     -- LENGTHS
     for i=1,g.cols do
@@ -296,6 +308,12 @@ function redraw()
       screen.level(length)
       screen.text(length)
     end
+    
+    screen.move(10, 46)
+    screen.level(15)
+    screen.text("KEY3")
+    screen.level(5)
+    screen.text(" to randomize")
   end
   
   screen.update()
