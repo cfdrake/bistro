@@ -3,9 +3,10 @@
 -- by: @cfd90
 -- originally by: @stretta
 
-engine.name = "PolyPerc"
+engine.name = "KarplusRings"
 
 local MusicUtil = require "musicutil"
+local rings = include("we/lib/karplus_rings")
 local hs = include("lib/halfsecond")
 
 local g
@@ -23,7 +24,7 @@ function init()
   params:add_separator()
   params:add_option("clock_rate", "clock rate", {1, 2, 4, 8, 16}, 4)
   params:add_group("note data", 1 + g.cols)
-  params:add_number("base_note", "base note", 1, 127, 60)
+  params:add_number("base_note", "base note", 1, 127, 48)
   
   local start_notes = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24}
   
@@ -55,35 +56,21 @@ function init()
   end
   
   params:add_separator()
-  
-  cs_AMP = controlspec.new(0,1,'lin',0,0.5,'')
-  params:add{type="control",id="amp",controlspec=cs_AMP,
-    action=function(x) engine.amp(x) end}
-
-  cs_PW = controlspec.new(0,100,'lin',0,50,'%')
-  params:add{type="control",id="pw",controlspec=cs_PW,
-    action=function(x) engine.pw(x/100) end}
-
-  cs_REL = controlspec.new(0.1,3.2,'lin',0,1.2,'s')
-  params:add{type="control",id="release",controlspec=cs_REL,
-    action=function(x) engine.release(x) end}
-
-  cs_CUT = controlspec.new(50,5000,'exp',0,800,'hz')
-  params:add{type="control",id="cutoff",controlspec=cs_CUT,
-    action=function(x) engine.cutoff(x) end}
-
-  cs_GAIN = controlspec.new(0,4,'lin',0,1,'')
-  params:add{type="control",id="gain",controlspec=cs_GAIN,
-    action=function(x) engine.gain(x) end}
-  
-  cs_PAN = controlspec.new(-1,1, 'lin',0,0,'')
-  params:add{type="control",id="pan",controlspec=cs_PAN,
-    action=function(x) engine.pan(x) end}
+  rings.params()
   
   params:add_separator()
   hs.init()
   
   params:bang()
+  
+  -- Overrides.
+  params:set("damping", 3)
+  params:set("brightness", 0.8)
+  params:set("lpf_freq", 5000)
+  params:set("lpf_gain", 1)
+  params:set("bpf_freq", 200)
+  params:set("bpf_res", 2)
+  
   params:read()
   
   clk = clock.run(tick)
@@ -113,7 +100,7 @@ function tick()
         if p[track.counter] == 1 then
           local note = get_note(i)
           local freq = MusicUtil.note_num_to_freq(note)
-          
+
           engine.hz(freq)
         end
         
