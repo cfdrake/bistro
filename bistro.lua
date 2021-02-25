@@ -225,6 +225,10 @@ end
 function enc(n, d)
   if n == 1 then
     page = util.clamp(page + d, 1, #pages)
+    
+    for i=1,g.cols do
+      tracks[i] = { counter = nil, pattern = nil }
+    end
   end
   
   if page == 1 then
