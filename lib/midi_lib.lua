@@ -2,11 +2,10 @@ local midi_lib = {}
 
 function midi_lib.init()
   midi_out = nil
-  io_prefix = {"MIDI_in", "MIDI_out"} -- we'll set up many parameters which use these two prefixes
     
   params:add_separator("outgoing MIDI") -- separators help keep the PARAMETERS menu UI clean
     
-  midi_out = midi.connect(1) -- connect both midi input and output to vport 1
+  midi_out = midi.connect(1) -- connect midi output to vport 1
     
   params:add_number("MIDI_out_device", "device", 1, #midi.vports, 1) -- vport selector
   params:set_action("MIDI_out_device", function(x) -- when this parameter changes, peform the following:
