@@ -13,9 +13,9 @@ function midi_lib.init()
     midi_lib.update_midi_params() -- update the params to match the newly-selected device
   end)
   
-  params:add_text("MIDI_out_name", ">>> device name", midi_out.name) -- display the selected vport's device name
+  params:add_text("MIDI_out_name", ">>> dev. name", string.len(midi_out.name) > 15 and util.acronym(midi_out.name) or midi_out.name) -- display the selected vport's device name
   
-  params:add_text("MIDI_out_state", ">>> device connected", tostring(midi_out.connected)) -- display the selected vport's connected state
+  params:add_text("MIDI_out_state", ">>> dev. connected?", tostring(midi_out.connected)) -- display the selected vport's connected state
   
   params:add_number("MIDI_out_channel", "channel", 1, 16, 1)
   params:add_number("MIDI_out_velocity", "velocity", 0, 127, 100)
@@ -23,7 +23,7 @@ function midi_lib.init()
 end
 
 function midi_lib.update_midi_params() -- updates info-only parameters, to help user identify port/device pairs
-  params:set("MIDI_out_name",midi_out.name)
+  params:set("MIDI_out_name",(string.len(midi_out.name) > 15 and util.acronym(midi_out.name) or midi_out.name))
   params:set("MIDI_out_state",tostring(midi_out.connected))
 end
 

@@ -62,8 +62,7 @@ function init()
   params:add_separator()
   hs.init()
   
-  midi_lib.init("out")
-  midi_out.active_notes = {}
+  midi_lib.init()
   
   params:bang()
   
@@ -123,7 +122,6 @@ function tick()
           engine.hz(freq)
           
           track.active_note = note
-          midi_out:note_off(track.active_note, params:get("MIDI_out_velocity"), params:get("MIDI_out_channel"))
           midi_out:note_on(track.active_note, params:get("MIDI_out_velocity"), params:get("MIDI_out_channel"))
           
         else
