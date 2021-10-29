@@ -8,6 +8,7 @@ engine.name = "KarplusRings"
 local MusicUtil = require "musicutil"
 local rings = include("we/lib/karplus_rings")
 local hs = include("lib/halfsecond")
+local midi_lib = include("lib/midi_lib")
 
 local g
 local clk
@@ -32,7 +33,7 @@ function init()
     local note_name = "note_" .. i
     
     params:add_number(note_name, note_name:gsub("_", " "), -24, 24, start_notes[i])
-    tracks[i] = { counter = nil, pattern = nil }
+    tracks[i] = { counter = nil, pattern = nil ,  active_note = nil}
   end
   
   params:add_group("pattern data", g.rows + (g.rows * g.cols))
@@ -42,7 +43,7 @@ function init()
     
     params:add_number(pattern_len_name, pattern_len_name:gsub("_", " "), 1, g.cols, g.cols)
     params:set_action(pattern_len_name, function(x)
-      grid_redraw()
+      grid_dirty = true
     end)
     
     for j=1,g.cols do
@@ -50,7 +51,7 @@ function init()
       
       params:add_number(trig_name, trig_name:gsub("_", " "), 0, 1, math.random() > 0.5 and 1 or 0)
       params:set_action(trig_name, function(x)
-        grid_redraw()
+        grid_dirty = true
       end)
     end
   end
@@ -60,6 +61,8 @@ function init()
   
   params:add_separator()
   hs.init()
+  
+  midi_lib.init()
   
   params:bang()
   
@@ -74,8 +77,22 @@ function init()
   params:read()
   
   clk = clock.run(tick)
+  hardware_clk = clock.run(function()
+    while true do
+      clock.sleep(1/30)
+      if grid_dirty then
+        grid_redraw()
+        grid_dirty = false
+      end
+      if screen_dirty then
+        redraw()
+        screen_dirty = false
+      end
+    end
+  end
+  )
   
-  grid_redraw()
+  grid_dirty = true
 end
 
 function cleanup()
@@ -87,8 +104,9 @@ function tick()
     local rate = params:get("clock_rate")
     clock.sync(1/rate)
     
-    grid_redraw()
-    redraw()
+    grid_dirty = true
+    
+    screen_dirty = true
     
     for i=1,g.cols do
       local track = tracks[i]
@@ -102,6 +120,12 @@ function tick()
           local freq = MusicUtil.note_num_to_freq(note)
 
           engine.hz(freq)
+          
+          track.active_note = note
+          midi_out:note_on(track.active_note, params:get("MIDI_out_velocity"), params:get("MIDI_out_channel"))
+          
+        else
+          midi_out:note_off(track.active_note, params:get("MIDI_out_velocity"), params:get("MIDI_out_channel"))
         end
         
         -- Advance counter.
@@ -152,6 +176,7 @@ function grid_key(x, y, z)
     elseif z == 0 then
       tracks[x].pattern = nil
       tracks[x].counter = nil
+      midi_out:note_off(tracks[x].active_note)
     end
   elseif page == 2 then
     -- PATTERNS
@@ -236,8 +261,8 @@ function enc(n, d)
     end
   end
   
-  grid_redraw()
-  redraw()
+  grid_dirty = true
+  screen_dirty = true
 end
 
 function key(n, z)
