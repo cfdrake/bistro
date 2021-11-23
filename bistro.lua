@@ -26,13 +26,13 @@ function init()
   params:add_option("clock_rate", "clock rate", {1, 2, 4, 8, 16}, 4)
   params:add_group("note data", 1 + g.cols)
   params:add_number("base_note", "base note", 1, 127, 48)
-  
-  local start_notes = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24}
-  
+
+  local start_notes = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24, 26}
+
   for i=1,g.cols do
     local note_name = "note_" .. i
-    
-    params:add_number(note_name, note_name:gsub("_", " "), -24, 24, start_notes[i])
+
+    params:add_number(note_name, note_name:gsub("_", " "), -24, 48, start_notes[i])
     tracks[i] = { counter = nil, pattern = nil ,  active_note = nil}
   end
   
