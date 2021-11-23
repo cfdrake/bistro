@@ -40,8 +40,8 @@ function init()
   
   for i=1,g.rows do
     local pattern_len_name = "pattern_" .. i .. "_length"
-    
-    params:add_number(pattern_len_name, pattern_len_name:gsub("_", " "), 1, g.cols, g.cols)
+
+    params:add_number(pattern_len_name, pattern_len_name:gsub("_", " "), 1, g.cols, math.min(g.rows, g.cols))
     params:set_action(pattern_len_name, function(x)
       grid_dirty = true
     end)
