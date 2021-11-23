@@ -330,7 +330,7 @@ function redraw()
     screen.text(" to randomize")
   elseif page == 3 then
     -- LENGTHS
-    for i=1,g.cols do
+    for i=1, g.rows do
       local length = get_pattern_length(i)
       
       screen.move(10 + (i-1)*10, 36)
