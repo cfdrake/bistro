@@ -26,13 +26,13 @@ function init()
   params:add_option("clock_rate", "clock rate", {1, 2, 4, 8, 16}, 4)
   params:add_group("note data", 1 + g.cols)
   params:add_number("base_note", "base note", 1, 127, 48)
-  
-  local start_notes = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24}
-  
+
+  local start_notes = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24, 26}
+
   for i=1,g.cols do
     local note_name = "note_" .. i
-    
-    params:add_number(note_name, note_name:gsub("_", " "), -24, 24, start_notes[i])
+
+    params:add_number(note_name, note_name:gsub("_", " "), -24, 48, start_notes[i])
     tracks[i] = { counter = nil, pattern = nil ,  active_note = nil}
   end
   
@@ -40,8 +40,8 @@ function init()
   
   for i=1,g.rows do
     local pattern_len_name = "pattern_" .. i .. "_length"
-    
-    params:add_number(pattern_len_name, pattern_len_name:gsub("_", " "), 1, g.cols, g.cols)
+
+    params:add_number(pattern_len_name, pattern_len_name:gsub("_", " "), 1, g.cols, math.min(g.rows, g.cols))
     params:set_action(pattern_len_name, function(x)
       grid_dirty = true
     end)
@@ -330,7 +330,7 @@ function redraw()
     screen.text(" to randomize")
   elseif page == 3 then
     -- LENGTHS
-    for i=1,g.cols do
+    for i=1, g.rows do
       local length = get_pattern_length(i)
       
       screen.move(10 + (i-1)*10, 36)
