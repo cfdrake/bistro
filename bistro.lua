@@ -6,7 +6,7 @@
 engine.name = "KarplusRings"
 
 local MusicUtil = require "musicutil"
-local rings = include("we/lib/karplus_rings")
+local rings = include("awake-rings/lib/karplus_rings")
 local hs = include("lib/halfsecond")
 local midi_lib = include("lib/midi_lib")
 
