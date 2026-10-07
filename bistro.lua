@@ -24,7 +24,7 @@ function init()
   
   params:add_separator()
   params:add_option("clock_rate", "clock rate", {1, 2, 4, 8, 16}, 4)
-  params:add_group("note data", 1 + g.cols)
+  params:add_group("note data", 2 + g.cols)
   params:add_number("base_note", "base note", 1, 127, 48)
 
   local start_notes = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24, 26}
@@ -35,6 +35,33 @@ function init()
     params:add_number(note_name, note_name:gsub("_", " "), -24, 48, start_notes[i])
     tracks[i] = { counter = nil, pattern = nil ,  active_note = nil}
   end
+
+  params:add_option("show_notes_as", "show as", {"offsets", "names"})
+  params:set_action("show_notes_as", function(v)
+    if v == 1 then
+       params:lookup_param("base_note").formatter = nil
+       for i=1,g.cols do
+	  local p = params:lookup_param("note_"..i)
+	  p.formatter = nil
+       end
+    elseif v == 2 then
+       params:lookup_param("base_note").formatter = function(p)
+	  return note_name_and_octave(p.value)
+       end
+       for i=1,g.cols do
+	  local p = params:lookup_param("note_"..i)
+	  p.formatter = function(pn)
+	     local b = params:get("base_note")
+	     if pn.value == 0 then
+		return note_name_and_octave(b).." (base)"
+	     else
+		local n = b + pn.value
+		return note_name_and_octave(n)
+	     end
+	  end
+       end
+    end
+  end)
   
   params:add_group("pattern data", g.rows + (g.rows * g.cols))
   
@@ -165,6 +192,10 @@ function get_pattern(i)
   end
   
   return p
+end
+
+function note_name_and_octave(num)
+   return MusicUtil.note_num_to_name(num-1)..(num-1)//12 - 2
 end
 
 function grid_key(x, y, z)
