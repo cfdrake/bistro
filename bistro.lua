@@ -2,6 +2,10 @@
 -- "press cafe" remake
 -- by: @cfd90
 -- originally by: @stretta
+--
+-- on play page K3 to latch
+--  E2, E3, K2+E2, K2+E3 voice
+-- other pages K3 to randomize
 
 engine.name = "KarplusRings"
 
@@ -12,6 +16,8 @@ local midi_lib = include("lib/midi_lib")
 
 local g
 local clk
+local filter_ctrl = 0
+local latch = 0
 
 local pages = {"PLAY", "PATTERNS", "LENGTHS"}
 local page = 1
@@ -22,7 +28,7 @@ function init()
   g = grid.connect()
   g.key = grid_key
   
-  params:add_separator()
+  params:add_separator("press cafe")
   params:add_option("clock_rate", "clock rate", {1, 2, 4, 8, 16}, 4)
   params:add_group("note data", 1 + g.cols)
   params:add_number("base_note", "base note", 1, 127, 48)
@@ -54,12 +60,13 @@ function init()
         grid_dirty = true
       end)
     end
+
   end
   
-  params:add_separator()
+  params:add_separator("rings")
   rings.params()
   
-  params:add_separator()
+  params:add_separator("halfsecond")
   hs.init()
   
   midi_lib.init()
@@ -170,7 +177,7 @@ end
 function grid_key(x, y, z)
   if page == 1 then
     -- PLAY
-    if z == 1 and tracks[x].counter == nil then
+    if z == 1 and tracks[x].counter == nil or latch == 1 then
       tracks[x].pattern = y
       tracks[x].counter = 1
     elseif z == 0 then
@@ -250,18 +257,28 @@ end
 function enc(n, d)
   if n == 1 then
     page = util.clamp(page + d, 1, #pages)
-    
-    for i=1,g.cols do
-      tracks[i] = { counter = nil, pattern = nil }
+
+    if latch ~= 1 then
+       for i=1,g.cols do
+	  tracks[i] = { counter = nil, pattern = nil }
+       end
     end
   end
   
   if page == 1 then
     -- PLAY
     if n == 2 then
-      params:delta("cutoff", d)
+      if filter_ctrl == 1 then
+         params:delta("lpf_freq", d)
+      else
+	 params:delta("damping", d)
+      end
     elseif n == 3 then
-      params:delta("pw", d)
+      if filter_ctrl == 1 then
+         params:delta("bpf_freq", d)
+      else
+	 params:delta("brightness", d)
+      end
     end
   end
   
@@ -270,14 +287,15 @@ function enc(n, d)
 end
 
 function key(n, z)
-  if z == 0 then
-    return
-  end
-  
   if page == 1 then
     -- PLAY
     -- todo: random notes?
-  elseif page == 2 then
+     if n == 2 then
+	filter_ctrl = z
+     elseif n == 3 then
+	latch = z
+     end
+  elseif page == 2 and z == 1 then
     -- PATTERNS
     if n == 3 then
       for i=1,g.cols do
@@ -286,7 +304,7 @@ function key(n, z)
         end
       end
     end
-  elseif page == 3 then
+  elseif page == 3 and z == 1 then
     -- LENGTH
     if n == 3 then
       for i=1,g.cols do
@@ -308,7 +326,7 @@ function redraw()
     for i=1,g.cols do
       local track = tracks[i]
       
-      screen.move(10 + (i-1)*10, 36)
+      screen.move(i*(128/(g.cols+1)), 36+latch*4)
       
       if track.pattern ~= nil and track.counter ~= nil then
         local p = get_pattern(track.pattern)
